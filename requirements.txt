@@ -1,0 +1,15 @@
+fastapi
+uvicorn
+sqlalchemy
+psycopg2-binary
+python-dotenv
+passlib
+python-jose
+bcrypt
+pypdf
+requests
+beautifulsoup4
+python-docx
+sentence-transformers
+weaviate-client
+langchain
