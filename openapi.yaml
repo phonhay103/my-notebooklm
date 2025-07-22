@@ -1,0 +1,215 @@
+openapi: 3.0.0
+info:
+  title: NotebookLM Clone API
+  description: API for a clone of Google's NotebookLM
+  version: 1.0.0
+servers:
+  - url: /api/v1
+paths:
+  /auth/login:
+    post:
+      summary: User login
+      description: Authenticates a user and returns an access token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserLoginSchema'
+      responses:
+        '200':
+          description: Successful login
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthTokenSchema'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorSchema'
+  /notebooks:
+    post:
+      summary: Create a new notebook
+      description: Creates a new notebook for the authenticated user.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewNotebookSchema'
+      responses:
+        '201':
+          description: Notebook created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotebookSchema'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorSchema'
+    get:
+      summary: Get user's notebooks
+      description: Retrieves a list of all notebooks for the authenticated user.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: A list of notebooks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NotebookSchema'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorSchema'
+  /notebooks/{notebookId}/sources:
+    post:
+      summary: Add a source to a notebook
+      description: Adds a new source (PDF, URL, etc.) to a notebook.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: notebookId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewSourceSchema'
+      responses:
+        '201':
+          description: Source added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SourceSchema'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorSchema'
+  /notebooks/{notebookId}/chat:
+    post:
+      summary: Chat with a notebook
+      description: Sends a query to the RAG pipeline for a specific notebook.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: notebookId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatQuerySchema'
+      responses:
+        '200':
+          description: Chat response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponseSchema'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorSchema'
+components:
+  schemas:
+    UserLoginSchema:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+    AuthTokenSchema:
+      type: object
+      properties:
+        accessToken:
+          type: string
+    NewNotebookSchema:
+      type: object
+      properties:
+        title:
+          type: string
+    NotebookSchema:
+      type: object
+      properties:
+        notebookId:
+          type: string
+        title:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    NewSourceSchema:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ['pdf', 'url', 'docx']
+        uri:
+          type: string
+    SourceSchema:
+      type: object
+      properties:
+        sourceId:
+          type: string
+        type:
+          type: string
+        status:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    ChatQuerySchema:
+      type: object
+      properties:
+        query:
+          type: string
+    ChatResponseSchema:
+      type: object
+      properties:
+        response:
+          type: string
+        citations:
+          type: array
+          items:
+            type: string
+    ErrorSchema:
+      type: object
+      properties:
+        message:
+          type: string
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
